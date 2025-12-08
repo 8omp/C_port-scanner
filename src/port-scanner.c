@@ -68,16 +68,17 @@ int main(int argc, char *argv[]){
 
 // void * : 戻り値が任意の型のポインタであることを示す
 void *scan_ports_thread(void *args){
+    
     ThreadArgs *thread_args = (ThreadArgs *)args;//voidポインタをThreadArgsポインタにキャスト
-
-    // -> : 構造体ポインタが指すメンバにアクセスするための演算子
-    // (*thread_args).start_port と同じ意味
+    
     for(int port = thread_args -> start_port; port <= thread_args -> end_port; port++){
         if(scan_port(thread_args -> ip, port) == 1){
             printf("Port %d: OPEN\n", port);
         }
     }
-}
+    return NULL;
+
+} 
 
 int scan_port(const char *ip, int port){
     
