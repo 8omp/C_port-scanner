@@ -7,8 +7,8 @@ OBJ_DIR = obj
 TARGET = port-scanner
 
 SRCS = $(SRC_DIR)/main.c \
-       $(SRC_DIR)/scan_connect.c \
-       $(SRC_DIR)/thread_pool.c
+    	$(SRC_DIR)/scan_connect.c \
+    	$(SRC_DIR)/thread_pool.c
 
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
