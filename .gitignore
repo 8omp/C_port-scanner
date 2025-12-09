@@ -14,3 +14,6 @@ obj/
 # デバッグ
 *.dSYM/
 core
+
+#　その他
+port-scanner.c
