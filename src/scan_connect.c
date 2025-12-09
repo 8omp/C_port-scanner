@@ -6,9 +6,10 @@
  * @param port 対象ポート番号
  * @return 1: オープン, 0: クローズ, -1: エラー
  */
+
 int scan_port_connect(const char *ip, int port) {
     int sock;
-    struct sockaddr_in target;
+    struct sockaddr_in target; // sockaddr_inは、AF_INET、ポート番号、IPアドレスを格納するための構造体
 
     // ソケット作成
     sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,8 +29,8 @@ int scan_port_connect(const char *ip, int port) {
     close(sock);
 
     if (result == 0) {
-        return 1; // 接続成功 = ポートオープン
+        return 1; 
     } else {
-        return 0; // 接続失敗 = ポートクローズ
+        return 0; 
     }
 }
