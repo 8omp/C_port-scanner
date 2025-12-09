@@ -1,0 +1,16 @@
+# ビルド成果物
+port-scanner
+obj/
+
+# オブジェクトファイル
+*.o
+
+# エディタ・IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# デバッグ
+*.dSYM/
+core
