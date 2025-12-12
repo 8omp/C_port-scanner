@@ -47,7 +47,7 @@ int resolve_hostname(const char *hostname, char *ip_out, size_t ip_out_size){
 
     int status = getaddrinfo(hostname, NULL, &hints, &res);
     if(status != 0){
-        fprintf(stderr, "DNS resolution failed: %s\n", gai_strerror(status));
+        fprintf(stderr, "ERROR: DNS resolution failed: %s\n", gai_strerror(status));
         return -1;
     }
 
