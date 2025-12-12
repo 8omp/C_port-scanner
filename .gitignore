@@ -18,3 +18,4 @@ core
 #　その他
 port-scanner.c
 .github
+devnote.md
