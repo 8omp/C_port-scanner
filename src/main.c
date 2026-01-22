@@ -1,24 +1,50 @@
-#include "scanner.h"
-#include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <errno.h>
 
-int main(int argc, char *argv[]) {
-    char ip_address[16];
-    char input[256];
+#define PS_CONNECT 0   /* ポートに接続できた場合 */
+#define PS_NOCONNECT 1 /* ポートに接続できなかった場合 */
+#define PS_ERROR -1     /* 接続エラー */
 
-    if (argc > 1) {
-        strncpy(input, argv[1], sizeof(input) - 1);
-        input[sizeof(input) - 1] = '\0';
-    } else {
-        printf("Usage: %s <IP_ADDRESS>\n", argv[0]);
-        exit(EXIT_FAILURE);
+/*!
+ * @brief   タイムアウトを設定したソケットを作成する
+ * @return  ソケットディスクリプタ
+ * @note    受信設定をしないと正常にタイムアウトしない。（仕様？）
+ */
+static int
+create_timeout_socket()
+{
+    int sock = 0;
+
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if(sock < 0){
+        perror("socket");
+        return(-1);
     }
 
-    if(resolve_hostname(input, ip_address, sizeof(ip_address)) != 0){
-        exit(EXIT_FAILURE);
-    }
+    /* 送信タイムアウトを設定する */
+    struct timeval send_tv;
+    send_tv.tv_sec  = 10;
+    send_tv.tv_usec = 0; //μs単位
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &send_tv, sizeof(send_tv));
 
-    printf("Target: %s (%s)\n", input, ip_address);
-    run_threaded_scan(ip_address);
+    /* 受信タイムアウトを設定する */
+    struct timeval recv_tv;
+    recv_tv.tv_sec = 10;
+    recv_tv.tv_sec = 0;
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &recv_tv, sizeof(recv_tv));
 
+    return(sock);
+}
+
+int main(void){
     return 0;
 }
