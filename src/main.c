@@ -14,11 +14,7 @@
 #define PS_NOCONNECT 1 /* ポートに接続できなかった場合 */
 #define PS_ERROR -1     /* 接続エラー */
 
-/*!
- * @brief   タイムアウトを設定したソケットを作成する
- * @return  ソケットディスクリプタ
- * @note    受信設定をしないと正常にタイムアウトしない⇒recv()を呼び出す前提
- */
+// タイムアウトを設定したソケットを作成する
 static int create_timeout_socket(){
 
     int sock = 0;
@@ -45,20 +41,33 @@ static int create_timeout_socket(){
 
 }
 
-/*!
- * @brief     接続できるか確認する
- * @param[in] sock      ソケットディスクリプタ
- * @param[in] dest      サーバ構造体
- * @param[in] dest_size サーバ構造体のサイズ
- * @return    接続状態を返す。
- */
-
+// 接続できるか確認する
 static int check_connect(int sock, struct sockaddr* dest, size_t dest_size){
 
     int rc = 0;
 
+    
+
+}
+
+// 指定ポートに接続を試みる
+static int connect_to_port(char *ipaddr, int n_port){
+
+    struct sockaddr_in dest;
+    int sock = 0;
+    int rc = 0;
+
+    sock = create_timeout_socket();
+    if(sock < 0){
+        return PS_ERROR;
+    }
+
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_addr.s_addr = inet_addr(ipaddr);
+
     errno = 0;
-    rc = connect(sock, dest, dest_size);
+    rc = connect(sock, (struct sockaddr*)&dest, sizeof(dest));
     if(rc == 0){
         return PS_CONNECT;
     }
@@ -74,27 +83,20 @@ static int check_connect(int sock, struct sockaddr* dest, size_t dest_size){
 
     return PS_NOCONNECT;
 
+    close(sock);
 }
 
-/*!
- * @brief     指定ポートに接続を試みる
- * @param[in] ipaddr    IPアドレス(xx.xx.xx.xx表記の文字列）
- * @param[in] port_num  ポート番号
- */
+//ポート番号に対応するサービス名を出力する
+static void print_portname(int port_num){
 
-static int connect_to_port(char *ipaddr, int n_port){
+    struct servent *se = NULL;
 
-    struct sockaddr_in dest;
-    int sock = 0;
-    int rc = 0;
+    se = getservbyport(htons(port_num), "tcp");
 
-    memset(&dest, 0, sizeof(dest));
-    dest.sin_family = AF_INET;
-    dest.sin_addr.s_addr = inet_addr(ipaddr);
-
-    rc = check_connect(sock, (struct sockaddr*)&dest, sizeof(dest));
-
-    close(sock);
-
-    return rc;
+    if(se == NULL){
+        fprintf(stdout, "port = %5d, unknown\n", port_num);
+    }else{
+        fprintf(stdout, "port = %5d, service = %s\n", port_num, se->s_name);
+    }
+    
 }
