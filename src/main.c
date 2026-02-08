@@ -41,21 +41,13 @@ static int create_timeout_socket(){
 
 }
 
-// 接続できるか確認する
-static int check_connect(int sock, struct sockaddr* dest, size_t dest_size){
-
-    int rc = 0;
-
-    
-
-}
-
 // 指定ポートに接続を試みる
 static int connect_to_port(char *ipaddr, int n_port){
 
     struct sockaddr_in dest;
     int sock = 0;
     int rc = 0;
+    int ret_code = 0;
 
     sock = create_timeout_socket();
     if(sock < 0){
@@ -64,26 +56,28 @@ static int connect_to_port(char *ipaddr, int n_port){
 
     memset(&dest, 0, sizeof(dest));
     dest.sin_family = AF_INET;
-    dest.sin_addr.s_addr = inet_addr(ipaddr);
-
-    errno = 0;
-    rc = connect(sock, (struct sockaddr*)&dest, sizeof(dest));
-    if(rc == 0){
-        return PS_CONNECT;
-    }
-
-    if(errno == ECONNREFUSED){
-        return PS_NOCONNECT;
-    }
-
-    if(errno != 0){
-        perror("connect");
+    dest.sin_port   = htons(n_port);
+    if (inet_pton(AF_INET, ipaddr, &dest.sin_addr) <= 0) {
+        fprintf(stderr, "Invalid IP address: %s\n", ipaddr);
+        close(sock);
         return PS_ERROR;
     }
 
-    return PS_NOCONNECT;
+    errno = 0;
+    rc = connect(sock, (struct sockaddr*)&dest, sizeof(dest));
+    
+    if(rc == 0){
+        ret_code = PS_CONNECT;
+    }else if(errno == ECONNREFUSED){
+        ret_code = PS_NOCONNECT;
+    }else{
+        perror("connect");
+        ret_code = PS_ERROR;
+    }
 
     close(sock);
+    return ret_code;
+
 }
 
 //ポート番号に対応するサービス名を出力する
@@ -98,5 +92,5 @@ static void print_portname(int port_num){
     }else{
         fprintf(stdout, "port = %5d, service = %s\n", port_num, se->s_name);
     }
-    
+
 }
