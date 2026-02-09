@@ -57,6 +57,7 @@ static int connect_to_port(char *ipaddr, int n_port){
     memset(&dest, 0, sizeof(dest));
     dest.sin_family = AF_INET;
     dest.sin_port   = htons(n_port);
+
     if (inet_pton(AF_INET, ipaddr, &dest.sin_addr) <= 0) {
         fprintf(stderr, "Invalid IP address: %s\n", ipaddr);
         close(sock);
@@ -91,6 +92,29 @@ static void print_portname(int port_num){
         fprintf(stdout, "port = %5d, unknown\n", port_num);
     }else{
         fprintf(stdout, "port = %5d, service = %s\n", port_num, se->s_name);
+    }
+
+}
+
+//ポートスキャンの実行
+static void port_scan(char *ipaddr, int start_port, int end_port){
+
+    int port_num = 0;
+    int rc = 0;
+
+    for(port_num = start_port; port_num <= end_port; port_num++){
+        rc = connect_to_port(ipaddr, port_num);
+
+        if(rc = PS_ERROR){
+            fprintf(stderr, "Error occurred while connecting to port %d\n", port_num);
+            continue;
+        }
+
+        if(rc == PS_CONNECT){
+            fprintf(stdout, "Port %d: Open\n", port_num);
+            print_portname(port_num);
+        }
+
     }
 
 }
