@@ -129,7 +129,7 @@ static void port_scan(char *ipaddr, int start_port, int end_port){
 
         if(rc == PS_ERROR){
             fprintf(stderr, "Error occurred while connecting to port %d\n", port_num);
-            exit(EXIT_FAILURE);
+            //exit(EXIT_FAILURE);
         }
 
         if(rc == PS_CONNECT){
