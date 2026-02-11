@@ -110,6 +110,12 @@ static void print_portname(int port_num){
 
     int err = getnameinfo((struct sockaddr*)&sa, sizeof(sa), NULL, 0, service, sizeof(service), 0);
 
+    if(err == 0){
+        fprintf(stdout, "Port %d: Open (%s)\n", port_num, service);
+    }else{
+        fprintf(stdout, "Port %d: Open (unknown)\n", port_num);
+    }
+
 }
 
 //ポートスキャンの実行
@@ -121,13 +127,12 @@ static void port_scan(char *ipaddr, int start_port, int end_port){
     for(port_num = start_port; port_num <= end_port; port_num++){
         rc = connect_to_port(ipaddr, port_num);
 
-        if(rc = PS_ERROR){
+        if(rc == PS_ERROR){
             fprintf(stderr, "Error occurred while connecting to port %d\n", port_num);
             exit(EXIT_FAILURE);
         }
 
         if(rc == PS_CONNECT){
-            fprintf(stdout, "Port %d: Open\n", port_num);
             print_portname(port_num);
         }
     }
