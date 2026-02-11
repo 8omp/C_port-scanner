@@ -1,4 +1,4 @@
-#define _POSIX_C_SOURCE 200112L　//getnameinfoを使うための魔法の呪文
+#define _POSIX_C_SOURCE 200112L
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -139,4 +139,23 @@ static void port_scan(char *ipaddr, int start_port, int end_port){
 
 }
 
-//
+int main(int argc, char *argv[]){
+
+    if(argc != 4){
+        fprintf(stderr, "Usage: %s <IP address> <start port> <end port>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char *ipaddr = argv[1];
+    int start_port = atoi(argv[2]);
+    int end_port = atoi(argv[3]);
+
+    if(start_port < 1 || start_port > 65535 || end_port < 1 || end_port > 65535 || start_port > end_port){
+        fprintf(stderr, "Invalid port range: %d - %d\n", start_port, end_port);
+        exit(EXIT_FAILURE);
+    }
+
+    port_scan(ipaddr, start_port, end_port);
+
+    return 0;
+}

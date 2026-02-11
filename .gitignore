@@ -16,6 +16,6 @@ obj/
 core
 
 #　その他
-port-scanner.c
+sample
 .github
 devnote.md
