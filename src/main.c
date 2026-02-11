@@ -1,3 +1,5 @@
+#define _POSIX_C_SOURCE 200112L　//getnameinfoを使うための魔法の呪文
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,6 +44,10 @@ static int create_timeout_socket(){
 }
 
 // 指定ポートに接続を試みる
+
+// dest.sin_family: IPv4
+// dest.sin_port: ポート番号
+// dest.sin_addr: 接続先のIPアドレス
 static int connect_to_port(char *ipaddr, int n_port){
 
     struct sockaddr_in dest;
@@ -84,15 +90,25 @@ static int connect_to_port(char *ipaddr, int n_port){
 //ポート番号に対応するサービス名を出力する
 static void print_portname(int port_num){
 
-    struct servent *se = NULL;
+    // struct servent *se = NULL;
 
-    se = getservbyport(htons(port_num), "tcp");
+    // se = getservbyport(htons(port_num), "tcp");
 
-    if(se == NULL){
-        fprintf(stdout, "port = %5d, unknown\n", port_num);
-    }else{
-        fprintf(stdout, "port = %5d, service = %s\n", port_num, se->s_name);
-    }
+    // if(se == NULL){
+    //     fprintf(stdout, "port = %5d, unknown\n", port_num);
+    // }else{
+    //     fprintf(stdout, "port = %5d, service = %s\n", port_num, se->s_name);
+    // }
+
+    struct sockaddr_in sa;
+    char service[32];
+
+    memset(&sa, 0, sizeof(sa));
+    memset(service, 0, sizeof(service));
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(port_num);
+
+    int err = getnameinfo((struct sockaddr*)&sa, sizeof(sa), NULL, 0, service, sizeof(service), 0);
 
 }
 
@@ -107,14 +123,15 @@ static void port_scan(char *ipaddr, int start_port, int end_port){
 
         if(rc = PS_ERROR){
             fprintf(stderr, "Error occurred while connecting to port %d\n", port_num);
-            continue;
+            exit(EXIT_FAILURE);
         }
 
         if(rc == PS_CONNECT){
             fprintf(stdout, "Port %d: Open\n", port_num);
             print_portname(port_num);
         }
-
     }
 
 }
+
+//
