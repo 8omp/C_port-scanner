@@ -29,13 +29,13 @@ static int create_timeout_socket(){
 
     //送信タイムアウト設定
     struct timeval send_tv;
-    send_tv.tv_sec = 10;
+    send_tv.tv_sec = 3;
     send_tv.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &send_tv, sizeof(send_tv));  
 
     //受信タイムアウト設定
     struct timeval recv_tv;
-    recv_tv.tv_sec = 10;
+    recv_tv.tv_sec = 3;
     recv_tv.tv_usec = 0;
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &recv_tv, sizeof(recv_tv));
 
