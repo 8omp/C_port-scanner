@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -O2 -I./include
 
 SRC_DIR = src
 OBJ_DIR = obj
-TARGET = port-scanner
+TARGET = 8ompscan
 
 SRCS = $(SRC_DIR)/main.c \
 		$(SRC_DIR)/banner.c
