@@ -6,7 +6,8 @@ OBJ_DIR = obj
 TARGET = 8ompscan
 
 SRCS = $(SRC_DIR)/main.c \
-		$(SRC_DIR)/banner.c
+		$(SRC_DIR)/banner.c \
+		$(SRC_DIR)/scan_connect.c
 
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
