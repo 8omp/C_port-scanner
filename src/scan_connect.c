@@ -110,7 +110,7 @@ static void print_portname(int port_num){
 }
 
 //ポートスキャンの実行
-static void port_scan(char *ipaddr, int start_port, int end_port){
+void scan_connect(char *ipaddr, int start_port, int end_port){
 
     int port_num = 0;
     int rc = 0;
