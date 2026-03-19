@@ -18,7 +18,7 @@
 #define PS_ERROR -1     /* 接続エラー */
 
 // タイムアウトを設定したソケットを作成する
-static int create_timeout_socket(){
+static int create_socket(){
 
     int sock = 0;
 
@@ -49,6 +49,7 @@ static int create_timeout_socket(){
 // dest.sin_family: IPv4
 // dest.sin_port: ポート番号
 // dest.sin_addr: 接続先のIPアドレス
+// nmapならfilteredもあるけど、今回は接続できない場合は全てclosedとする
 static int connect_to_port(char *ipaddr, int n_port){
 
     struct sockaddr_in dest;
@@ -56,7 +57,7 @@ static int connect_to_port(char *ipaddr, int n_port){
     int rc = 0;
     int ret_code = 0;
 
-    sock = create_timeout_socket();
+    sock = create_socket();
     if(sock < 0){
         return PS_ERROR;
     }
