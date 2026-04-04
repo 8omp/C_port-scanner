@@ -23,3 +23,22 @@ uint16_t checksum(uint16_t *buf, int size) {
     sum = (sum & 0xffff) + (sum >> 16);
     return ~sum;
 }
+
+int main(int argc, char *argv[]) {
+
+    char target_ip[16];
+    fgets(target_ip, sizeof(target_ip), stdin);
+
+    int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
+    if(sock < 0){
+        perror("Socket error");
+        exit(1);
+    }
+
+    char datagram[4096];
+    memset(datagram, 0, 4096);
+
+
+
+    return 0;
+}
