@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,17 +12,18 @@
 
 //チェックサム計算
 uint16_t checksum(uint16_t *buf, int size) {
-    unsigned long sum = 0;
-    // 16ビット(毎に計算
+    uint32_t sum = 0;
+    // 16ビット(2バイト)毎に計算
     while( size > 1 ) {
         sum += *buf;
         buf++;
         size -= 2;
     }
     if( size == 1 ) { sum += *(uint8_t *)buf; }
-    // 反転と溢れ処理
+    // 溢れ処理
     sum = (sum & 0xffff) + (sum >> 16);
-    sum = (sum & 0xffff) + (sum >> 16);
+    sum = sum + (sum >> 16);
+    // ビット反転
     return ~sum;
 }
 
@@ -47,7 +50,7 @@ int main(int argc, char *argv[]) {
     sin.sin_addr.s_addr = inet_addr(dest_ip);
 
     // IPヘッダの設定
-    iph->ihl = 5; // IPヘッダの長さ (5 * 4 = 20バイト)
+    iph->ihl = 5; // IPヘッダの長さ (5 * 4 = 20バイト)4倍は<<2で後に計算する
     iph->version = 4;
     iph->tos = 0;// Type of Service, 通常は0でいいっぽい
     iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr));
@@ -60,11 +63,45 @@ int main(int argc, char *argv[]) {
     iph->daddr = sin.sin_addr.s_addr;
 
     // IPヘッダのチェックサム計算
-    iph->check = checksum((uint16_t *)datagram, iph->ihl<<2);
+    iph->check = checksum((uint16_t *)datagram, iph->ihl<<2);// <<2は4倍するため
 
     // TCPヘッダの設定
+    tcph->source = htons(12345); // 任意の送信元ポート
+    tcph->dest = htons(80); // 任意の宛先ポート
+    tcph->seq = htonl(0);
+    tcph->ack_seq = 0;
+    tcph->doff = 5;
+    tcph->syn = 1;// SYNフラグをセット
+    tcph->window = htons(5840);
+    tcph->check = 0;
+    tcph->urg_ptr = 0;
 
-    
+    //12バイト
+    struct pseudo_header{
+        uint32_t source_addr;
+        uint32_t dest_addr;
+        uint8_t zero;
+        uint8_t protocol;
+        uint16_t tcp_length;
+    };
+
+    char pseudo_packet[4096];//4096バイト
+    struct pseudo_header psh;
+
+    psh.source_addr = inet_addr(source_ip);
+    psh.dest_addr = sin.sin_addr.s_addr;
+    psh.zero = 0;
+    psh.protocol = IPPROTO_TCP;
+    psh.tcp_length = htons(sizeof(struct tcphdr));
+
+    // 擬似ヘッダをコピー
+    memcpy(pseudo_packet, &psh, sizeof(struct pseudo_header));
+    // TCPヘッダを擬似ヘッダの後ろにコピー
+    memcpy(pseudo_packet + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr));
+
+    // 1バイト刻みから2バイト刻みに、sizeは32バイトのみ計算し、残りは計算しないようにする
+    tcph->check = checksum((uint16_t *)pseudo_packet, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+
 
 
     return 0;
