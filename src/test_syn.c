@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in sin;
     sin.sin_family = AF_INET;
-    sin.sin_port = htons(80);
+    sin.sin_port = htons(80);//これは別に必要ない
     sin.sin_addr.s_addr = inet_addr(dest_ip);
 
     // IPヘッダの設定
@@ -102,7 +102,26 @@ int main(int argc, char *argv[]) {
     // 1バイト刻みから2バイト刻みに、sizeは32バイトのみ計算し、残りは計算しないようにする
     tcph->check = checksum((uint16_t *)pseudo_packet, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
 
-
+    // 通常のソケット通信では、IPヘッダはOS（カーネル）が自動で付け加える。
+    // Raw Socketで自分でIPヘッダを作る場合は、
+    // カーネルに二重でIPヘッダを付けられないように設定をする必要がある。
+    // IPPROTO_IP：IP層の設定
+    // IP_HDRINCL：1（true）に設定すると、自分でIPヘッダを作成して送ることを意味する
+    // oneはただの有効(true)
+    // setsockoptのoptvalはvoidポインタなので、値を直接渡せず
+    // 値のアドレス（ポインタ）を渡す必要があるというCの関数仕様によるもの
+    int one = 1;
+    const int *val = &one;
+    if(setsockopt(sock, IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0){
+        perror("Error setting IP_HDRINCL");
+        exit(1);
+    }
+    if(sendto(sock, datagram, ntohs(iph->tot_len), 0, (struct sockaddr *)&sin, sizeof(sin)) < 0){
+        perror("Error sending packet");
+        exit(1);
+    }else{
+        printf("SYN packet sent successfully\n");
+    }
 
     return 0;
 }
