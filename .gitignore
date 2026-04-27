@@ -19,5 +19,4 @@ core
 sample
 .github
 devnote.md
-src/syn_compare*
-src/test
+test_code/
