@@ -19,6 +19,5 @@ core
 sample
 .github
 devnote.md
-src/syn_compare_in_c.c
-src/syn_compare.pcapng
+src/syn_compare*
 src/test

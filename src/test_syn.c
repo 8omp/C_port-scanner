@@ -29,7 +29,7 @@ uint16_t checksum(uint16_t *buf, int size) {
 
 int main(int argc, char *argv[]) {
 
-    char source_ip[16] = "192.168.0.13";
+    char source_ip[16] = "192.168.0.10";
     char dest_ip[16] = "192.168.0.1";
 
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
@@ -49,12 +49,18 @@ int main(int argc, char *argv[]) {
     sin.sin_port = htons(80);//これは別に必要ない
     sin.sin_addr.s_addr = inet_addr(dest_ip);
 
+    struct MSS{
+        uint8_t kind;
+        uint8_t length;
+        uint16_t mss_value;
+    };
+
     // IPヘッダの設定
     // IPヘッダの長さは、IPヘッダのサイズを4バイト単位で表す必要があるため、5に設定。5にしているのは、定義が4bitで11までしか表せないから。
     iph->ihl = 5; // IPヘッダの長さ (5 * 4 = 20バイト)4倍は<<2で後に計算する
     iph->version = 4;
     iph->tos = 0;// Type of Service, 通常は0でいいっぽい
-    iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr));
+    iph->tot_len = htons(sizeof(struct iphdr) + sizeof(struct tcphdr) + sizeof(struct MSS));
     iph->id = htons(9999);
     iph->frag_off = 0;
     iph->ttl = 64;
@@ -67,15 +73,25 @@ int main(int argc, char *argv[]) {
     iph->check = checksum((uint16_t *)datagram, iph->ihl<<2);// <<2は4倍するため
 
     // TCPヘッダの設定
-    tcph->source = htons(12340); // 任意の送信元ポート
+    tcph->source = htons(12345); // 任意の送信元ポート
     tcph->dest = htons(80); // 任意の宛先ポート
     tcph->seq = htonl(0);
     tcph->ack_seq = 0;
-    tcph->doff = 5;
+    tcph->doff = 6; // TCPヘッダの長さ (6 * 4 = 24バイト)オプションを入れるため、5から6にする
     tcph->syn = 1;// SYNフラグをセット
     tcph->window = htons(5840);
     tcph->check = 0;
     tcph->urg_ptr = 0;
+
+    // MSSの設定
+    char mss[1460];
+    struct MSS mss_option;
+
+    mss_option.kind = 2;
+    mss_option.length = 4;
+    mss_option.mss_value = htons(1460);
+
+    memcpy(mss, &mss_option, sizeof(struct MSS));
 
     //12バイト
     struct pseudo_header{
@@ -93,21 +109,20 @@ int main(int argc, char *argv[]) {
     psh.dest_addr = sin.sin_addr.s_addr;
     psh.zero = 0;
     psh.protocol = IPPROTO_TCP;
-    psh.tcp_length = htons(sizeof(struct tcphdr));
+    psh.tcp_length = htons(sizeof(struct tcphdr) + sizeof(struct MSS));
+
+    memcpy(datagram + sizeof(struct iphdr) + sizeof(struct tcphdr), mss, sizeof(struct MSS));
 
     // 擬似ヘッダをコピー
     memcpy(pseudo_packet, &psh, sizeof(struct pseudo_header));
-    // TCPヘッダを擬似ヘッダの後ろにコピー
+    // TCPヘッダを擬似ヘッダの後ろにコピー tcphdr -> pseudoの順番
     memcpy(pseudo_packet + sizeof(struct pseudo_header), tcph, sizeof(struct tcphdr));
+    // MSSを、擬似ヘッダとTCPヘッダの後ろにコピー tcphdr -> pseudo -> MSSの順番
+    memcpy(pseudo_packet + sizeof(struct pseudo_header) + sizeof(struct tcphdr), mss, sizeof(struct MSS));
 
     // 1バイト刻みから2バイト刻みに、sizeは32バイトのみ計算し、残りは計算しないようにする
-    tcph->check = checksum((uint16_t *)pseudo_packet, sizeof(struct pseudo_header) + sizeof(struct tcphdr));
+    tcph->check = checksum((uint16_t *)pseudo_packet, sizeof(struct pseudo_header) + sizeof(struct tcphdr) + sizeof(struct MSS));
 
-    // 通常のソケット通信では、IPヘッダはOS（カーネル）が自動で付け加える。
-    // Raw Socketで自分でIPヘッダを作る場合は、
-    // カーネルに二重でIPヘッダを付けられないように設定をする必要がある。
-    // IPPROTO_IP：IP層の設定
-    // IP_HDRINCL：1（true）に設定すると、自分でIPヘッダを作成して送ることを意味する
     // oneはただの有効(true)
     // setsockoptのoptvalはvoidポインタなので、値を直接渡せず
     // 値のアドレス（ポインタ）を渡す必要があるというCの関数仕様によるもの
