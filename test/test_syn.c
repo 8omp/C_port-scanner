@@ -29,7 +29,7 @@ uint16_t checksum(uint16_t *buf, int size) {
 
 int main(int argc, char *argv[]) {
 
-    char source_ip[16] = "192.168.0.10";
+    char source_ip[16] = "172.30.224.5";
     char dest_ip[16] = "45.33.32.156";
 
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
