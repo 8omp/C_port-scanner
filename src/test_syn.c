@@ -30,7 +30,7 @@ uint16_t checksum(uint16_t *buf, int size) {
 int main(int argc, char *argv[]) {
 
     char source_ip[16] = "192.168.0.10";
-    char dest_ip[16] = "192.168.0.1";
+    char dest_ip[16] = "45.33.32.156";
 
     int sock = socket(AF_INET, SOCK_RAW, IPPROTO_RAW);
     if(sock < 0){
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
     // TCPヘッダの設定
     tcph->source = htons(12345); // 任意の送信元ポート
     tcph->dest = htons(80); // 任意の宛先ポート
-    tcph->seq = htonl(0);
+    tcph->seq = htonl(rand());
     tcph->ack_seq = 0;
     tcph->doff = 6; // TCPヘッダの長さ (6 * 4 = 24バイト)オプションを入れるため、5から6にする
     tcph->syn = 1;// SYNフラグをセット
