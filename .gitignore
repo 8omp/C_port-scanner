@@ -20,5 +20,3 @@ sample
 .github
 devnote.md
 test_code/
-*.Identifier
-.gitignore:Zone.Identifier
